@@ -48,6 +48,9 @@ export default function Navbar() {
             <li>
               <Link href="/about#team">Our Team</Link>
             </li>
+            <li>
+              <Link href="/membership">Become a Member</Link>
+            </li>
           </ul>
         </li>
 

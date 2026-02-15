@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { newsApi, eventsApi, galleryApi, queryKeys } from "@/lib/api";
+import { newsApi, eventsApi, galleryApi, membershipsApi, queryKeys } from "@/lib/api";
 import { CreateNewsDto, UpdateNewsDto } from "@/types/news";
 import { CreateEventDto, UpdateEventDto } from "@/types/events";
 import { CreateGalleryDto, UpdateGalleryDto } from "@/types/gallery";
+import { CreateMembershipDto, UpdateMembershipDto } from "@/types/membership";
 
 export function useNews() {
   return useQuery({
@@ -152,6 +153,72 @@ export function useDeleteGallery() {
     mutationFn: (id: string) => galleryApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.gallery.lists() });
+    },
+  });
+}
+
+export function useMemberships() {
+  return useQuery({
+    queryKey: queryKeys.memberships.lists(),
+    queryFn: membershipsApi.getAll,
+  });
+}
+
+export function usePendingMemberships() {
+  return useQuery({
+    queryKey: queryKeys.memberships.pending(),
+    queryFn: membershipsApi.getPending,
+  });
+}
+
+export function useApprovedMemberships() {
+  return useQuery({
+    queryKey: queryKeys.memberships.approved(),
+    queryFn: membershipsApi.getApproved,
+  });
+}
+
+export function useMembershipById(id: string) {
+  return useQuery({
+    queryKey: queryKeys.memberships.detail(id),
+    queryFn: () => membershipsApi.getById(id),
+    enabled: !!id,
+  });
+}
+
+export function useCreateMembership() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: CreateMembershipDto) => membershipsApi.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.memberships.lists() });
+    },
+  });
+}
+
+export function useUpdateMembership() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateMembershipDto }) => 
+      membershipsApi.update(id, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.memberships.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.memberships.detail(variables.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.memberships.pending() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.memberships.approved() });
+    },
+  });
+}
+
+export function useDeleteMembership() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (id: string) => membershipsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.memberships.lists() });
     },
   });
 }

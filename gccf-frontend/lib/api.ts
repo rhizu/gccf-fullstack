@@ -1,6 +1,7 @@
 import { News, CreateNewsDto, UpdateNewsDto } from '@/types/news';
 import { Event, CreateEventDto, UpdateEventDto } from '@/types/events';
 import { Gallery, CreateGalleryDto, UpdateGalleryDto } from '@/types/gallery';
+import { Membership, CreateMembershipDto, UpdateMembershipDto } from '@/types/membership';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
@@ -15,6 +16,11 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 
   if (!response.ok) {
     throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  }
+
+  const contentLength = response.headers.get('content-length');
+  if (contentLength === '0' || !contentLength) {
+    return undefined as T;
   }
 
   return response.json();
@@ -116,6 +122,34 @@ export const galleryApi = {
     fetchApi<void>(`/gallery/${id}`, { method: 'DELETE' }),
 };
 
+export const membershipsApi = {
+  getAll: () => fetchApi<Membership[]>('/memberships'),
+  
+  getPending: () => 
+    fetchApi<Membership[]>('/memberships/pending'),
+  
+  getApproved: () => 
+    fetchApi<Membership[]>('/memberships/approved'),
+  
+  getById: (id: string) => 
+    fetchApi<Membership>(`/memberships/${id}`),
+  
+  create: (data: CreateMembershipDto) => 
+    fetchApi<Membership>('/memberships', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  
+  update: (id: string, data: UpdateMembershipDto) => 
+    fetchApi<Membership>(`/memberships/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  
+  delete: (id: string) => 
+    fetchApi<void>(`/memberships/${id}`, { method: 'DELETE' }),
+};
+
 export const queryKeys = {
   news: {
     all: ['news'] as const,
@@ -137,5 +171,14 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) => [...queryKeys.gallery.lists(), { filters }] as const,
     details: () => [...queryKeys.gallery.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.gallery.details(), id] as const,
+  },
+  memberships: {
+    all: ['memberships'] as const,
+    lists: () => [...queryKeys.memberships.all, 'list'] as const,
+    list: (filters: Record<string, unknown>) => [...queryKeys.memberships.lists(), { filters }] as const,
+    details: () => [...queryKeys.memberships.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.memberships.details(), id] as const,
+    pending: () => [...queryKeys.memberships.all, 'pending'] as const,
+    approved: () => [...queryKeys.memberships.all, 'approved'] as const,
   },
 };

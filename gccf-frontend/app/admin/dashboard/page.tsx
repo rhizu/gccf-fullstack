@@ -20,13 +20,17 @@ import {
   FaTimes,
   FaSave,
   FaSpinner,
+  FaCheck,
+  FaBan,
+  FaEnvelope,
 } from "react-icons/fa";
 import "./adminpage.css";
 import Link from "next/link";
-import { newsApi, eventsApi, galleryApi } from "@/lib/api";
+import { newsApi, eventsApi, galleryApi, membershipsApi } from "@/lib/api";
 import { News, CreateNewsDto, UpdateNewsDto } from "@/types/news";
 import { Event, CreateEventDto, UpdateEventDto } from "@/types/events";
 import { Gallery, CreateGalleryDto, UpdateGalleryDto } from "@/types/gallery";
+import { Membership } from "@/types/membership";
 
 type NewsFormData = {
   title: string;
@@ -122,11 +126,12 @@ export default function AdminDashboard() {
   const [newsList, setNewsList] = useState<News[]>([]);
   const [eventsList, setEventsList] = useState<Event[]>([]);
   const [galleryList, setGalleryList] = useState<Gallery[]>([]);
+  const [membershipsList, setMembershipsList] = useState<Membership[]>([]);
 
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{type: 'news' | 'events' | 'gallery', id: string} | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<{type: 'news' | 'events' | 'gallery' | 'memberships', id: string} | null>(null);
 
   const [editingNews, setEditingNews] = useState<News | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
@@ -143,14 +148,16 @@ export default function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [news, events, gallery] = await Promise.all([
+      const [news, events, gallery, memberships] = await Promise.all([
         newsApi.getAll(),
         eventsApi.getAll(),
         galleryApi.getAll(),
+        membershipsApi.getAll(),
       ]);
       setNewsList(news);
       setEventsList(events);
       setGalleryList(gallery);
+      setMembershipsList(memberships);
     } catch (err) {
       setError("Failed to load data. Please check if the backend is running.");
       console.error(err);
@@ -164,7 +171,8 @@ export default function AdminDashboard() {
   }, [fetchData]);
 
   const stats = {
-    totalMembers: 12458,
+    totalMembers: membershipsList.length,
+    pendingMembers: membershipsList.filter(m => m.status === 'pending').length,
     activeEvents: eventsList.filter(e => e.status === 'upcoming').length,
     totalNews: newsList.length,
     monthlyViews: 45789,
@@ -432,8 +440,10 @@ export default function AdminDashboard() {
         await newsApi.delete(showDeleteConfirm.id);
       } else if (showDeleteConfirm.type === 'events') {
         await eventsApi.delete(showDeleteConfirm.id);
-      } else {
+      } else if (showDeleteConfirm.type === 'gallery') {
         await galleryApi.delete(showDeleteConfirm.id);
+      } else if (showDeleteConfirm.type === 'memberships') {
+        await membershipsApi.delete(showDeleteConfirm.id);
       }
       await fetchData();
       setShowDeleteConfirm(null);
@@ -688,6 +698,165 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const handleMembershipStatusChange = async (id: string, status: 'approved' | 'declined' | 'pending') => {
+    setLoading(true);
+    try {
+      await membershipsApi.update(id, { status });
+      await fetchData();
+    } catch (err) {
+      setError("Failed to update membership status");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredMemberships = membershipsList.filter(m => {
+    const matchesSearch = 
+      m.firstName.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      m.lastName.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      m.email.toLowerCase().includes(searchFilter.toLowerCase());
+    const matchesStatus = statusFilter === "all" || m.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const renderMembers = () => (
+    <div className="dashboard-content">
+      <div className="page-header">
+        <div>
+          <h1>Membership Management</h1>
+          <p>Review and manage membership applications</p>
+        </div>
+      </div>
+
+      <div className="content-filters">
+        <div className="search-box">
+          <FaSearch />
+          <input type="text" placeholder="Search members..." value={searchFilter} onChange={(e) => setSearchFilter(e.target.value)} />
+        </div>
+        <select className="filter-select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="declined">Declined</option>
+        </select>
+      </div>
+
+      <div className="members-stats">
+        <div className="member-stat-card pending">
+          <FaUsers />
+          <div>
+            <span className="stat-number">{membershipsList.filter(m => m.status === 'pending').length}</span>
+            <span className="stat-label">Pending</span>
+          </div>
+        </div>
+        <div className="member-stat-card approved">
+          <FaCheck />
+          <div>
+            <span className="stat-number">{membershipsList.filter(m => m.status === 'approved').length}</span>
+            <span className="stat-label">Approved</span>
+          </div>
+        </div>
+        <div className="member-stat-card declined">
+          <FaBan />
+          <div>
+            <span className="stat-number">{membershipsList.filter(m => m.status === 'declined').length}</span>
+            <span className="stat-label">Declined</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="content-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Organization</th>
+              <th>Status</th>
+              <th>Applied</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredMemberships.map((member) => (
+              <tr key={member.id}>
+                <td>
+                  <div className="table-title">
+                    <strong>{member.firstName} {member.lastName}</strong>
+                    {member.occupation && <span className="excerpt">{member.occupation}</span>}
+                  </div>
+                </td>
+                <td>
+                  <a href={`mailto:${member.email}`} className="email-link">
+                    <FaEnvelope /> {member.email}
+                  </a>
+                </td>
+                <td>{member.phone}</td>
+                <td>{member.organization || "N/A"}</td>
+                <td>
+                  <span className={`status-badge ${member.status}`}>
+                    {member.status}
+                  </span>
+                </td>
+                <td>{new Date(member.createdAt).toLocaleDateString()}</td>
+                <td>
+                  <div className="action-buttons">
+                    {member.status === 'pending' && (
+                      <>
+                        <button 
+                          className="btn-icon success" 
+                          title="Approve" 
+                          onClick={() => handleMembershipStatusChange(member.id, 'approved')}
+                          disabled={loading}
+                        >
+                          <FaCheck />
+                        </button>
+                        <button 
+                          className="btn-icon danger" 
+                          title="Decline" 
+                          onClick={() => handleMembershipStatusChange(member.id, 'declined')}
+                          disabled={loading}
+                        >
+                          <FaBan />
+                        </button>
+                      </>
+                    )}
+                    {member.status !== 'pending' && (
+                      <button 
+                        className="btn-icon" 
+                        title="Reset to Pending" 
+                        onClick={() => handleMembershipStatusChange(member.id, 'pending')}
+                        disabled={loading}
+                      >
+                        <FaSpinner />
+                      </button>
+                    )}
+                    <button 
+                      className="btn-icon danger" 
+                      title="Delete" 
+                      onClick={() => setShowDeleteConfirm({type: 'memberships', id: member.id})}
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {filteredMemberships.length === 0 && (
+              <tr>
+                <td colSpan={7} style={{ textAlign: "center", padding: "2rem" }}>
+                  No membership applications found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+
   return (
     <div className="admin-dashboard">
       <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
@@ -782,12 +951,7 @@ export default function AdminDashboard() {
               {activeTab === "news" && renderNews()}
               {activeTab === "events" && renderEvents()}
               {activeTab === "gallery" && renderGallery()}
-              {activeTab === "members" && (
-                <div className="dashboard-content">
-                  <h1>Members Management</h1>
-                  <p>Coming soon...</p>
-                </div>
-              )}
+              {activeTab === "members" && renderMembers()}
               {activeTab === "analytics" && (
                 <div className="dashboard-content">
                   <h1>Analytics</h1>

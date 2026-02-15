@@ -6,6 +6,8 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { NewsModule } from './news/news.module';
 import { GalleryModule } from './gallery/gallery.module';
+import { MembershipsModule } from './memberships/memberships.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,9 +25,11 @@ import { GalleryModule } from './gallery/gallery.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
+    MailModule,
     EventsModule,
     NewsModule,
     GalleryModule,
+    MembershipsModule,
   ],
 })
 export class AppModule {}

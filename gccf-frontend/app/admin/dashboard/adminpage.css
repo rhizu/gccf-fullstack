@@ -1147,3 +1147,86 @@
   align-items: center;
   justify-content: space-between;
 }
+
+/* ===== Members Stats ===== */
+.members-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.member-stat-card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.member-stat-card svg {
+  font-size: 28px;
+}
+
+.member-stat-card.pending svg {
+  color: #ff9800;
+}
+
+.member-stat-card.approved svg {
+  color: #4caf50;
+}
+
+.member-stat-card.declined svg {
+  color: #f44336;
+}
+
+.member-stat-card .stat-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  display: block;
+}
+
+.member-stat-card .stat-label {
+  font-size: 13px;
+  color: #666666;
+}
+
+/* ===== Status Badges ===== */
+.status-badge.pending {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.status-badge.approved {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-badge.declined {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* ===== Email Link ===== */
+.email-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2196f3;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.email-link:hover {
+  color: #0d47a1;
+  text-decoration: underline;
+}
+
+/* ===== Success Button ===== */
+.btn-icon.success:hover {
+  background: #4caf50;
+  color: #ffffff;
+}
