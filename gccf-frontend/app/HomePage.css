@@ -50,6 +50,56 @@ button {
   cursor: pointer;
 }
 
+.parallax {
+  position: relative;
+  background-image: url("/statsbg2.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* ✨ parallax magic */
+}
+
+.parallax-overlay {
+   background: linear-gradient(
+    rgba(0, 70, 180, 0.6),
+    rgba(0, 30, 100, 0.7)
+  );
+  padding: 80px 20px;
+}
+
+/* .stats-section {
+          background-image: url('/statsbg.jpg');
+          background-size: cover;
+          background-position: 50% 40%;
+          padding: 100px 40px;
+          margin: 0px 0;
+        } */
+
+        .stats-grid {
+          max-width: 1200px;
+          margin: 0 auto;
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 60px;
+        }
+
+        .stat-item {
+          text-align: center;
+        }
+
+        .stat-number {
+          font-size: 4rem;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 0.5rem;
+          display: block;
+        }
+
+        .stat-label {
+          font-size: 1.1rem;
+          color: white;
+          font-weight: 500;
+        }
+
 /* ===== Typography ===== */
 h1, h2, h3, h4 {
   font-family: var(--font-heading);
@@ -123,8 +173,11 @@ h1, h2, h3, h4 {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+  background-image: url('/heroimg.jpg');
+  background-size: cover;
+  /* background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); */
   overflow: hidden;
+   background-attachment: fixed;
 }
 
 .hero-overlay {
@@ -133,8 +186,47 @@ h1, h2, h3, h4 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="1" fill="%23ffffff" opacity="0.1"/></svg>');
-  opacity: 0.4;
+   background: linear-gradient(
+    rgba(0, 70, 180, 0.6),
+    rgba(0, 30, 100, 0.7)
+  );
+  /* background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><circle cx="30" cy="30" r="1" fill="%23ffffff" opacity="0.1"/></svg>'); */
+}
+
+.hero-floating-shape {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 120px;
+  transition: transform 0.3s ease;
+}
+
+.shape-1 {
+  top: 15%;
+  left: 10%;
+  animation: float 5s ease-in-out infinite;
+}
+
+.shape-2 {
+  top: 60%;
+  right: 12%;
+  font-size: 80px;
+  animation: float 8s ease-in-out infinite reverse;
+}
+
+.shape-3 {
+  top: 35%;
+  right: 8%;
+  font-size: 60px;
+  animation: float 7s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(5deg);
+  }
 }
 
 .hero-container {
@@ -679,6 +771,10 @@ h1, h2, h3, h4 {
     font-size: 52px;
   }
   
+  .hero-floating-shape {
+    font-size: 80px !important;
+  }
+  
   .about-grid,
   .events-grid,
   .services-grid,
@@ -708,6 +804,10 @@ h1, h2, h3, h4 {
   
   .hero-text {
     font-size: 18px;
+  }
+  
+  .hero-floating-shape {
+    font-size: 60px !important;
   }
   
   .section-title {

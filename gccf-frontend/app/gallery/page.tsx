@@ -6,52 +6,74 @@ import { X, ZoomIn } from "lucide-react";
 
 export default function GalleryPage() {
   const { data: galleryList = [], isLoading, error } = useGallery();
-  const [selectedImage, setSelectedImage] = useState<import("@/types/gallery").Gallery | null>(null);
+  const [selectedImage, setSelectedImage] = useState<
+    import("@/types/gallery").Gallery | null
+  >(null);
   const [filter, setFilter] = useState("All");
 
-  const categories = ["All", ...new Set(galleryList.map(item => item.category).filter((c): c is string => Boolean(c)))];
+  const categories = [
+    "All",
+    ...new Set(
+      galleryList
+        .map((item) => item.category)
+        .filter((c): c is string => Boolean(c)),
+    ),
+  ];
 
-  const filteredImages = filter === "All"
-    ? galleryList.filter(item => item.isVisible)
-    : galleryList.filter(item => item.isVisible && item.category === filter);
+  const filteredImages =
+    filter === "All"
+      ? galleryList.filter((item) => item.isVisible)
+      : galleryList.filter(
+          (item) => item.isVisible && item.category === filter,
+        );
 
   if (isLoading) {
     return (
-      <div style={{
-        position: "fixed",
-        inset: 0,
-        background: "#fafafa",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999
-      }}>
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "#fafafa",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+        }}
+      >
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{
-          width: "50px",
-          height: "50px",
-          border: "4px solid #e0e0e0",
-          borderTopColor: "#0d47a1",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite"
-        }} />
-        <p style={{ marginTop: "1.5rem", color: "#666", fontSize: "1rem" }}>Loading gallery...</p>
+        <div
+          style={{
+            width: "50px",
+            height: "50px",
+            border: "4px solid #e0e0e0",
+            borderTopColor: "#0d47a1",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+          }}
+        />
+        <p style={{ marginTop: "1.5rem", color: "#666", fontSize: "1rem" }}>
+          Loading gallery...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "#fafafa",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#fafafa",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div style={{ textAlign: "center" }}>
-          <p style={{ color: "#dc2626", marginBottom: "1rem" }}>Failed to load gallery. Please try again later.</p>
+          <p style={{ color: "#dc2626", marginBottom: "1rem" }}>
+            Failed to load gallery. Please try again later.
+          </p>
           <button
             onClick={() => window.location.reload()}
             style={{
@@ -60,7 +82,7 @@ export default function GalleryPage() {
               color: "white",
               border: "none",
               borderRadius: "6px",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             Retry
@@ -75,7 +97,7 @@ export default function GalleryPage() {
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
         .gallery-page { background: #fafafa; min-height: 100vh; }
-        .gallery-hero { min-height: 60vh; background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); display: flex; align-items: center; justify-content: center; position: relative; padding: 120px 20px 60px; overflow: hidden; }
+        .gallery-hero { min-height: 60vh; background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); display: flex; align-items: center; justify-content: center; position: relative; padding: 120px 20px 60px; overflow: hidden; }
         .gallery-hero::before { content: ''; position: absolute; width: 500px; height: 500px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; top: -150px; right: -150px; }
         .hero-content { text-align: center; position: relative; z-index: 2; max-width: 800px; animation: fadeIn 1s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -117,14 +139,21 @@ export default function GalleryPage() {
       <section className="gallery-hero">
         <div className="hero-content">
           <h1>Our Gallery</h1>
-          <p>Capturing moments of impact, celebration, and community connection across our programs and initiatives.</p>
+          <p>
+            Capturing moments of impact, celebration, and community connection
+            across our programs and initiatives.
+          </p>
         </div>
       </section>
 
       <section className="filter-section">
         <div className="filter-buttons">
           {categories.map((category) => (
-            <button key={category} className={`filter-btn ${filter === category ? "active" : ""}`} onClick={() => setFilter(category)}>
+            <button
+              key={category}
+              className={`filter-btn ${filter === category ? "active" : ""}`}
+              onClick={() => setFilter(category)}
+            >
               {category}
             </button>
           ))}
@@ -133,17 +162,28 @@ export default function GalleryPage() {
 
       <section className="gallery-container">
         {filteredImages.length === 0 ? (
-          <p style={{ textAlign: "center", padding: "2rem" }}>No gallery items found.</p>
+          <p style={{ textAlign: "center", padding: "2rem" }}>
+            No gallery items found.
+          </p>
         ) : (
           <div className="gallery-grid">
             {filteredImages.map((image, index) => (
-              <div key={image.id} className="gallery-item" onClick={() => setSelectedImage(image)} style={{ animationDelay: `${index * 0.1}s` }}>
+              <div
+                key={image.id}
+                className="gallery-item"
+                onClick={() => setSelectedImage(image)}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
                 <div className="image-wrapper">
                   <img src={image.imageUrl} alt={image.title} />
-                  <div className="zoom-icon"><ZoomIn size={20} /></div>
+                  <div className="zoom-icon">
+                    <ZoomIn size={20} />
+                  </div>
                   <div className="image-overlay">
                     <div className="overlay-content">
-                      {image.category && <span className="category-tag">{image.category}</span>}
+                      {image.category && (
+                        <span className="category-tag">{image.category}</span>
+                      )}
                       <h3 className="image-title">{image.title}</h3>
                     </div>
                   </div>
@@ -156,8 +196,16 @@ export default function GalleryPage() {
 
       {selectedImage && (
         <div className="lightbox" onClick={() => setSelectedImage(null)}>
-          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setSelectedImage(null)}><X size={24} /></button>
+          <div
+            className="lightbox-content"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="close-btn"
+              onClick={() => setSelectedImage(null)}
+            >
+              <X size={24} />
+            </button>
             <img src={selectedImage.imageUrl} alt={selectedImage.title} />
           </div>
         </div>

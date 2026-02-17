@@ -81,7 +81,7 @@ export default function AboutPage() {
         /* Hero Section */
         .about-hero {
           min-height: 70vh;
-          background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+         background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
           display: flex;
           align-items: center;
           justify-content: center;

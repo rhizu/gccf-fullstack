@@ -9,41 +9,51 @@ export default function NewsPage() {
 
   if (isLoading) {
     return (
-      <div style={{
-        position: "fixed",
-        inset: 0,
-        background: "#fafafa",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999
-      }}>
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "#fafafa",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+        }}
+      >
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-        <div style={{
-          width: "50px",
-          height: "50px",
-          border: "4px solid #e0e0e0",
-          borderTopColor: "#0d47a1",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite"
-        }} />
-        <p style={{ marginTop: "1.5rem", color: "#666", fontSize: "1rem" }}>Loading news...</p>
+        <div
+          style={{
+            width: "50px",
+            height: "50px",
+            border: "4px solid #e0e0e0",
+            borderTopColor: "#0d47a1",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+          }}
+        />
+        <p style={{ marginTop: "1.5rem", color: "#666", fontSize: "1rem" }}>
+          Loading news...
+        </p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        background: "#fafafa",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#fafafa",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div style={{ textAlign: "center" }}>
-          <p style={{ color: "#dc2626", marginBottom: "1rem" }}>Failed to load news. Please try again later.</p>
+          <p style={{ color: "#dc2626", marginBottom: "1rem" }}>
+            Failed to load news. Please try again later.
+          </p>
           <button
             onClick={() => window.location.reload()}
             style={{
@@ -52,7 +62,7 @@ export default function NewsPage() {
               color: "white",
               border: "none",
               borderRadius: "6px",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             Retry
@@ -66,7 +76,7 @@ export default function NewsPage() {
     <div className="news-page">
       <style>{`
         .news-page { min-height: 100vh; background: #fafafa; }
-        .news-hero { background: linear-gradient(135deg, #0d47a1 0%, #2196f3 100%); padding: 120px 2rem 60px; text-align: center; }
+        .news-hero { background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%); padding: 120px 2rem 60px; text-align: center; }
         .news-hero h1 { font-size: 3.5rem; color: white; margin: 0 0 1rem 0; }
         .news-hero p { font-size: 1.2rem; color: rgba(255,255,255,0.9); max-width: 600px; margin: 0 auto; }
         .news-container { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; }
@@ -99,7 +109,10 @@ export default function NewsPage() {
 
       <section className="news-hero">
         <h1>Latest News</h1>
-        <p>Stay updated with the latest news, announcements, and stories from our community.</p>
+        <p>
+          Stay updated with the latest news, announcements, and stories from our
+          community.
+        </p>
       </section>
 
       <div className="news-container">
@@ -111,10 +124,16 @@ export default function NewsPage() {
         ) : (
           <div className="news-grid">
             {newsList.map((news) => (
-              <Link key={news.id} href={`/news/${news.slug}`} className="news-card">
+              <Link
+                key={news.id}
+                href={`/news/${news.slug}`}
+                className="news-card"
+              >
                 <div className="news-card-image">
                   <img src={news.featuredImage} alt={news.title} />
-                  {news.category && <span className="news-card-category">{news.category}</span>}
+                  {news.category && (
+                    <span className="news-card-category">{news.category}</span>
+                  )}
                 </div>
                 <div className="news-card-content">
                   <h2 className="news-card-title">{news.title}</h2>
@@ -122,9 +141,17 @@ export default function NewsPage() {
                   <div className="news-card-footer">
                     <div className="news-card-meta">
                       <span className="news-card-date">
-                        <FaCalendarAlt /> {new Date(news.publishedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        <FaCalendarAlt />{" "}
+                        {new Date(news.publishedDate).toLocaleDateString(
+                          "en-US",
+                          { year: "numeric", month: "short", day: "numeric" },
+                        )}
                       </span>
-                      {news.author && <span className="news-card-author">By {news.author}</span>}
+                      {news.author && (
+                        <span className="news-card-author">
+                          By {news.author}
+                        </span>
+                      )}
                     </div>
                     <span className="news-card-link">
                       Read More <FaArrowRight />

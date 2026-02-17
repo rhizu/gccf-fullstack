@@ -34,6 +34,7 @@
 /* dropdown items */
 .dropdownMenu li,
 .dropdownMenuRight li {
+  list-style-type: none;
   padding: 12px 18px;
   transition: background 0.2s ease, padding-left 0.2s ease;
 }

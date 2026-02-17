@@ -3,7 +3,17 @@
 import { useState } from "react";
 import { useCreateMembership } from "@/lib/hooks";
 import { CreateMembershipDto } from "@/types/membership";
-import { FaSpinner, FaCheckCircle, FaUser, FaEnvelope, FaPhone, FaMapMarkerAlt, FaBriefcase, FaBuilding, FaComment } from "react-icons/fa";
+import {
+  FaSpinner,
+  FaCheckCircle,
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaBriefcase,
+  FaBuilding,
+  FaComment,
+} from "react-icons/fa";
 
 export default function MembershipPage() {
   const createMembership = useCreateMembership();
@@ -21,7 +31,9 @@ export default function MembershipPage() {
     message: "",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -45,10 +57,13 @@ export default function MembershipPage() {
             <FaCheckCircle className="success-icon" />
             <h2>Application Submitted!</h2>
             <p>
-              Thank you for your interest in becoming a member of GCCF. Your application has been submitted successfully and is now pending review by our admin team.
+              Thank you for your interest in becoming a member of GCCF. Your
+              application has been submitted successfully and is now pending
+              review by our admin team.
             </p>
             <p>
-              Once approved, you will receive a welcome email and start receiving newsletters about our upcoming events.
+              Once approved, you will receive a welcome email and start
+              receiving newsletters about our upcoming events.
             </p>
             <button onClick={() => setSubmitted(false)} className="btn-primary">
               Submit Another Application
@@ -62,11 +77,14 @@ export default function MembershipPage() {
   return (
     <div className="membership-page">
       <style>{styles}</style>
-      
+
       <section className="hero-section">
         <div className="hero-content">
           <h1>Become a Member</h1>
-          <p>Join the GCCF community and stay connected with our events and initiatives</p>
+          <p>
+            Join the GCCF community and stay connected with our events and
+            initiatives
+          </p>
         </div>
       </section>
 
@@ -74,7 +92,10 @@ export default function MembershipPage() {
         <div className="form-container">
           <div className="form-header">
             <h2>Membership Application</h2>
-            <p>Fill out the form below to apply for GCCF membership. Our team will review your application.</p>
+            <p>
+              Fill out the form below to apply for GCCF membership. Our team
+              will review your application.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="membership-form">
@@ -222,7 +243,11 @@ export default function MembershipPage() {
               </div>
             )}
 
-            <button type="submit" className="btn-submit" disabled={createMembership.isPending}>
+            <button
+              type="submit"
+              className="btn-submit"
+              disabled={createMembership.isPending}
+            >
               {createMembership.isPending ? (
                 <>
                   <FaSpinner className="spinner" /> Submitting...
@@ -245,7 +270,7 @@ const styles = `
   }
 
   .hero-section {
-    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
+   background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
     padding: 120px 20px 80px;
     text-align: center;
     position: relative;

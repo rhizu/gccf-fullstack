@@ -13,7 +13,9 @@ import {
   FaInstagram,
   FaChevronDown,
 } from "react-icons/fa";
+import HeroSection from "../components/HeroSection";
 import "./HomePage.css";
+import Footer from "@/components/Footer";
 
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -158,26 +160,7 @@ export default function HomePage() {
 
   return (
     <div className="homepage">
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-overlay"></div>
-        <div className="hero-container">
-          <div className="hero-content">
-            <span className="hero-label">Global Cybersecurity Community</span>
-            <h1 className="hero-title">
-              Protecting the Digital World Together
-            </h1>
-            <p className="hero-text">
-              Join thousands of professionals shaping the future of
-              cybersecurity
-            </p>
-            <button className="btn-primary">Join Our Community</button>
-          </div>
-        </div>
-        <div className="scroll-indicator">
-          <FaChevronDown />
-        </div>
-      </section>
+      <HeroSection />
 
       {/* About Section */}
       <section className="about">
@@ -210,6 +193,33 @@ export default function HomePage() {
                 initiatives, we're building the next generation of cybersecurity
                 excellence.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="stats-section parallax">
+        <div className="parallax-overlay">
+          <div className="stats-grid">
+            <div className="stat-item">
+              <span className="stat-number">15+</span>
+              <span className="stat-label">Years of Impact</span>
+            </div>
+
+            <div className="stat-item">
+              <span className="stat-number">50K+</span>
+              <span className="stat-label">Lives Touched</span>
+            </div>
+
+            <div className="stat-item">
+              <span className="stat-number">120+</span>
+              <span className="stat-label">Active Projects</span>
+            </div>
+
+            <div className="stat-item">
+              <span className="stat-number">35</span>
+              <span className="stat-label">Countries</span>
             </div>
           </div>
         </div>
@@ -353,64 +363,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="container">
-          <div className="footer-grid">
-            <div className="footer-col">
-              <h3>Global Cybersecurity Community Forum</h3>
-              <p>
-                Empowering cybersecurity professionals worldwide through
-                community, collaboration, and continuous learning.
-              </p>
-            </div>
-            <div className="footer-col">
-              <h4>Quick Links</h4>
-              <ul>
-                <li>
-                  <a href="/about">About Us</a>
-                </li>
-                <li>
-                  <a href="/events">Events</a>
-                </li>
-                <li>
-                  <a href="/membership">Membership</a>
-                </li>
-                <li>
-                  <a href="/resources">Resources</a>
-                </li>
-                <li>
-                  <a href="/contact">Contact</a>
-                </li>
-              </ul>
-            </div>
-            <div className="footer-col">
-              <h4>Connect</h4>
-              <div className="social-links">
-                <a href="#" aria-label="Twitter">
-                  <FaTwitter />
-                </a>
-                <a href="#" aria-label="LinkedIn">
-                  <FaLinkedinIn />
-                </a>
-                <a href="#" aria-label="Facebook">
-                  <FaFacebookF />
-                </a>
-                <a href="#" aria-label="Instagram">
-                  <FaInstagram />
-                </a>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <p>
-              &copy; 2024 Global Cybersecurity Community Forum. All rights
-              reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
