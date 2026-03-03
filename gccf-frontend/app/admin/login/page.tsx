@@ -20,17 +20,14 @@ export default function AdminLogin() {
     setError("");
     setLoading(true);
 
-    // Simulate loading delay for better UX
-    setTimeout(() => {
-      const success = loginAdmin(username, password);
+    const success = await loginAdmin(username, password);
 
-      if (success) {
-        router.push("/admin/dashboard");
-      } else {
-        setError("Invalid credentials. Please try again.");
-        setLoading(false);
-      }
-    }, 800);
+    if (success) {
+      router.push("/admin/dashboard");
+    } else {
+      setError("Invalid credentials. Please try again.");
+      setLoading(false);
+    }
   }
 
   return (

@@ -8,6 +8,9 @@ import { NewsModule } from './news/news.module';
 import { GalleryModule } from './gallery/gallery.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { MailModule } from './mail/mail.module';
+import { AdminModule } from './admin/admin.module';
+import { AuthModule } from './auth/auth.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -26,6 +29,9 @@ import { MailModule } from './mail/mail.module';
       synchronize: true,
     }),
     MailModule,
+    AdminModule,
+    AuthModule,
+    AnalyticsModule,
     EventsModule,
     NewsModule,
     GalleryModule,

@@ -2,14 +2,18 @@ import { News, CreateNewsDto, UpdateNewsDto } from '@/types/news';
 import { Event, CreateEventDto, UpdateEventDto } from '@/types/events';
 import { Gallery, CreateGalleryDto, UpdateGalleryDto } from '@/types/gallery';
 import { Membership, CreateMembershipDto, UpdateMembershipDto } from '@/types/membership';
+import { getAdminToken } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
 
 async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = getAdminToken();
+  
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options?.headers,
     },
   });
@@ -181,4 +185,65 @@ export const queryKeys = {
     pending: () => [...queryKeys.memberships.all, 'pending'] as const,
     approved: () => [...queryKeys.memberships.all, 'approved'] as const,
   },
+};
+
+export interface DashboardStats {
+  totalMembers: number;
+  pendingMembers: number;
+  activeEvents: number;
+  totalNews: number;
+  totalGallery: number;
+  approvedMembers: number;
+  newMembersThisMonth: number;
+  newMembersThisWeek: number;
+  monthGrowth: number;
+  weekGrowth: number;
+}
+
+export interface MemberGrowthData {
+  date: string;
+  members: number;
+  newMembers: number;
+  total: number;
+}
+
+export interface EventAttendanceData {
+  events: Array<{
+    id: string;
+    title: string;
+    date: Date;
+    attendees: number;
+    location: string;
+  }>;
+  byType: Array<{
+    category: string;
+    count: number;
+    total: number;
+  }>;
+}
+
+export interface MembershipStats {
+  byStatus: Array<{ status: string; count: number }>;
+  byMonth: Array<{ month: string; count: number }>;
+}
+
+export interface ActivityItem {
+  type: 'member' | 'news' | 'event';
+  action: string;
+  title: string;
+  timestamp: Date;
+}
+
+export const analyticsApi = {
+  getDashboardStats: () => fetchApi<DashboardStats>('/analytics/dashboard'),
+  
+  getMemberGrowth: (days?: number) => 
+    fetchApi<MemberGrowthData[]>(`/analytics/member-growth${days ? `?days=${days}` : ''}`),
+  
+  getEventAttendance: () => fetchApi<EventAttendanceData>('/analytics/event-attendance'),
+  
+  getMembershipStats: () => fetchApi<MembershipStats>('/analytics/membership-stats'),
+  
+  getRecentActivity: (limit?: number) => 
+    fetchApi<ActivityItem[]>(`/analytics/recent-activity${limit ? `?limit=${limit}` : ''}`),
 };

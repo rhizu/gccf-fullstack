@@ -26,11 +26,12 @@ import {
 } from "react-icons/fa";
 import "./adminpage.css";
 import Link from "next/link";
-import { newsApi, eventsApi, galleryApi, membershipsApi } from "@/lib/api";
+import { newsApi, eventsApi, galleryApi, membershipsApi, analyticsApi, DashboardStats, MemberGrowthData, ActivityItem } from "@/lib/api";
 import { News, CreateNewsDto, UpdateNewsDto } from "@/types/news";
 import { Event, CreateEventDto, UpdateEventDto } from "@/types/events";
 import { Gallery, CreateGalleryDto, UpdateGalleryDto } from "@/types/gallery";
 import { Membership } from "@/types/membership";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 
 type NewsFormData = {
   title: string;
@@ -144,38 +145,67 @@ export default function AdminDashboard() {
   const [searchFilter, setSearchFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
+  const [memberGrowthData, setMemberGrowthData] = useState<MemberGrowthData[]>([]);
+  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
+  const [growthPeriod, setGrowthPeriod] = useState(7);
+
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [news, events, gallery, memberships] = await Promise.all([
+      const [news, events, gallery, memberships, stats, growth, activity] = await Promise.all([
         newsApi.getAll(),
         eventsApi.getAll(),
         galleryApi.getAll(),
         membershipsApi.getAll(),
+        analyticsApi.getDashboardStats(),
+        analyticsApi.getMemberGrowth(growthPeriod),
+        analyticsApi.getRecentActivity(8),
       ]);
       setNewsList(news);
       setEventsList(events);
       setGalleryList(gallery);
       setMembershipsList(memberships);
+      setDashboardStats(stats);
+      setMemberGrowthData(growth);
+      setRecentActivity(activity);
     } catch (err) {
       setError("Failed to load data. Please check if the backend is running.");
       console.error(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [growthPeriod]);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const stats = {
+  const stats = dashboardStats || {
     totalMembers: membershipsList.length,
     pendingMembers: membershipsList.filter(m => m.status === 'pending').length,
     activeEvents: eventsList.filter(e => e.status === 'upcoming').length,
     totalNews: newsList.length,
-    monthlyViews: 45789,
+    monthGrowth: 0,
+    weekGrowth: 0,
+  };
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+
+  const getRelativeTime = (date: Date | string) => {
+    const now = new Date();
+    const then = new Date(date);
+    const diff = now.getTime() - then.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return then.toLocaleDateString();
   };
 
   const renderDashboard = () => (
@@ -193,7 +223,9 @@ export default function AdminDashboard() {
           <div className="stat-info">
             <h3>{stats.totalMembers.toLocaleString()}</h3>
             <p>Total Members</p>
-            <span className="stat-trend positive">+12% this month</span>
+            <span className={`stat-trend ${stats.monthGrowth >= 0 ? 'positive' : 'negative'}`}>
+              {stats.monthGrowth >= 0 ? '+' : ''}{stats.monthGrowth}% this month
+            </span>
           </div>
         </div>
 
@@ -204,7 +236,7 @@ export default function AdminDashboard() {
           <div className="stat-info">
             <h3>{stats.activeEvents}</h3>
             <p>Active Events</p>
-            <span className="stat-trend positive">+3 this week</span>
+            <span className="stat-trend positive">+{dashboardStats?.newMembersThisWeek || 0} this week</span>
           </div>
         </div>
 
@@ -215,18 +247,18 @@ export default function AdminDashboard() {
           <div className="stat-info">
             <h3>{stats.totalNews}</h3>
             <p>Published Articles</p>
-            <span className="stat-trend positive">+8 this month</span>
+            <span className="stat-trend positive">{newsList.length > 0 ? `+${newsList.length}` : '0'} total</span>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-icon purple">
-            <FaEye />
+            <FaImages />
           </div>
           <div className="stat-info">
-            <h3>{stats.monthlyViews.toLocaleString()}</h3>
-            <p>Monthly Views</p>
-            <span className="stat-trend positive">+24% growth</span>
+            <h3>{galleryList.length}</h3>
+            <p>Gallery Items</p>
+            <span className="stat-trend positive">{stats.pendingMembers} pending</span>
           </div>
         </div>
       </div>
@@ -235,65 +267,82 @@ export default function AdminDashboard() {
         <div className="chart-card">
           <div className="chart-header">
             <h3>Member Growth</h3>
-            <select className="chart-filter">
-              <option>Last 7 days</option>
-              <option>Last 30 days</option>
-              <option>Last 90 days</option>
+            <select className="chart-filter" value={growthPeriod} onChange={(e) => setGrowthPeriod(Number(e.target.value))}>
+              <option value={7}>Last 7 days</option>
+              <option value={30}>Last 30 days</option>
+              <option value={90}>Last 90 days</option>
             </select>
           </div>
           <div className="chart-placeholder">
-            <div className="bar-chart">
-              <div className="bar" style={{ height: "60%" }}></div>
-              <div className="bar" style={{ height: "75%" }}></div>
-              <div className="bar" style={{ height: "55%" }}></div>
-              <div className="bar" style={{ height: "85%" }}></div>
-              <div className="bar" style={{ height: "70%" }}></div>
-              <div className="bar" style={{ height: "90%" }}></div>
-              <div className="bar" style={{ height: "80%" }}></div>
-            </div>
-            <div className="chart-labels">
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
-              <span>Sun</span>
-            </div>
+            {memberGrowthData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={memberGrowthData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}
+                    formatter={(value) => [value as number, 'Total Members']}
+                    labelFormatter={(label) => new Date(label as string).toLocaleDateString()}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="members" 
+                    stroke="#2196f3" 
+                    strokeWidth={2}
+                    dot={{ fill: '#2196f3', strokeWidth: 2 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 250, color: '#888' }}>
+                No membership data available yet
+              </div>
+            )}
           </div>
         </div>
 
         <div className="chart-card">
           <div className="chart-header">
-            <h3>Event Attendance</h3>
-            <select className="chart-filter">
-              <option>This Month</option>
-              <option>Last Month</option>
-              <option>This Year</option>
-            </select>
+            <h3>Membership Status</h3>
           </div>
           <div className="chart-placeholder">
-            <div className="pie-chart">
-              <svg viewBox="0 0 200 200">
-                <circle cx="100" cy="100" r="80" fill="none" stroke="#0d47a1" strokeWidth="40" strokeDasharray="126 377" transform="rotate(-90 100 100)" />
-                <circle cx="100" cy="100" r="80" fill="none" stroke="#2196f3" strokeWidth="40" strokeDasharray="94 377" strokeDashoffset="-126" transform="rotate(-90 100 100)" />
-                <circle cx="100" cy="100" r="80" fill="none" stroke="#64b5f6" strokeWidth="40" strokeDasharray="157 377" strokeDashoffset="-220" transform="rotate(-90 100 100)" />
-              </svg>
-              <div className="pie-legend">
-                <div className="legend-item">
-                  <span className="legend-color" style={{ background: "#0d47a1" }}></span>
-                  <span>Workshops (35%)</span>
-                </div>
-                <div className="legend-item">
-                  <span className="legend-color" style={{ background: "#2196f3" }}></span>
-                  <span>Conferences (25%)</span>
-                </div>
-                <div className="legend-item">
-                  <span className="legend-color" style={{ background: "#64b5f6" }}></span>
-                  <span>Webinars (40%)</span>
-                </div>
+            {dashboardStats ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Approved', value: dashboardStats.approvedMembers || 1 },
+                      { name: 'Pending', value: dashboardStats.pendingMembers || 1 },
+                      { name: 'Total', value: dashboardStats.totalMembers || 1 },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                    labelLine={false}
+                  >
+                    <Cell fill="#4caf50" />
+                    <Cell fill="#ff9800" />
+                    <Cell fill="#2196f3" />
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 250, color: '#888' }}>
+                Loading...
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -301,27 +350,23 @@ export default function AdminDashboard() {
       <div className="activity-section">
         <h3>Recent Activity</h3>
         <div className="activity-list">
-          <div className="activity-item">
-            <div className="activity-icon blue"><FaUsers /></div>
-            <div className="activity-content">
-              <p><strong>New member joined:</strong> Sarah Wilson</p>
-              <span className="activity-time">2 hours ago</span>
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity, index) => (
+              <div key={index} className="activity-item">
+                <div className={`activity-icon ${activity.type === 'member' ? 'blue' : activity.type === 'news' ? 'green' : 'orange'}`}>
+                  {activity.type === 'member' ? <FaUsers /> : activity.type === 'news' ? <FaNewspaper /> : <FaCalendarAlt />}
+                </div>
+                <div className="activity-content">
+                  <p><strong>{activity.title}</strong> - {activity.action}</p>
+                  <span className="activity-time">{getRelativeTime(activity.timestamp)}</span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: '1rem', color: '#888', textAlign: 'center' }}>
+              No recent activity yet
             </div>
-          </div>
-          <div className="activity-item">
-            <div className="activity-icon green"><FaNewspaper /></div>
-            <div className="activity-content">
-              <p><strong>Article published:</strong> Advanced Threat Detection</p>
-              <span className="activity-time">5 hours ago</span>
-            </div>
-          </div>
-          <div className="activity-item">
-            <div className="activity-icon orange"><FaCalendarAlt /></div>
-            <div className="activity-content">
-              <p><strong>Event registered:</strong> Cloud Security Workshop</p>
-              <span className="activity-time">1 day ago</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
