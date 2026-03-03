@@ -234,6 +234,34 @@ export interface ActivityItem {
   timestamp: Date;
 }
 
+export interface EventStats {
+  upcoming: number;
+  completed: number;
+  total: number;
+  byMonth: Array<{ month: string; count: number }>;
+}
+
+export interface NewsActivity {
+  total: number;
+  byMonth: Array<{ month: string; count: number }>;
+  byCategory: Array<{ category: string; count: number }>;
+}
+
+export interface MembershipByRange {
+  byStatus: Array<{ status: string; count: number }>;
+  byMonth: Array<{ month: string; count: number }>;
+}
+
+export interface ComprehensiveAnalytics {
+  dateRange: { start: string; end: string };
+  dashboardStats: DashboardStats;
+  memberGrowth: MemberGrowthData[];
+  eventStats: EventStats;
+  membershipStats: MembershipByRange;
+  newsActivity: NewsActivity;
+  recentActivity: ActivityItem[];
+}
+
 export const analyticsApi = {
   getDashboardStats: () => fetchApi<DashboardStats>('/analytics/dashboard'),
   
@@ -246,4 +274,94 @@ export const analyticsApi = {
   
   getRecentActivity: (limit?: number) => 
     fetchApi<ActivityItem[]>(`/analytics/recent-activity${limit ? `?limit=${limit}` : ''}`),
+
+  getEventStats: (startDate: string, endDate: string) =>
+    fetchApi<EventStats>(`/analytics/event-stats?startDate=${startDate}&endDate=${endDate}`),
+
+  getNewsActivity: (startDate: string, endDate: string) =>
+    fetchApi<NewsActivity>(`/analytics/news-activity?startDate=${startDate}&endDate=${endDate}`),
+
+  getMembershipByRange: (startDate: string, endDate: string) =>
+    fetchApi<MembershipByRange>(`/analytics/membership-by-range?startDate=${startDate}&endDate=${endDate}`),
+
+  getComprehensive: (startDate?: string, endDate?: string) => 
+    fetchApi<ComprehensiveAnalytics>(`/analytics/comprehensive${startDate && endDate ? `?startDate=${startDate}&endDate=${endDate}` : ''}`),
+
+  exportData: (type: 'members' | 'events' | 'news', startDate?: string, endDate?: string) => {
+    let url = `/analytics/export?type=${type}`;
+    if (startDate) url += `&startDate=${startDate}`;
+    if (endDate) url += `&endDate=${endDate}`;
+    return fetchApi<unknown[]>(url);
+  },
+};
+
+export interface Settings {
+  id: number;
+  accountSettings: {
+    name?: string;
+    email?: string;
+    twoFactorEnabled?: boolean;
+    lastLogin?: string;
+    lastLoginIP?: string;
+  };
+  securitySettings: {
+    minPasswordLength?: number;
+    requireSpecialChars?: boolean;
+    requireNumbers?: boolean;
+    requireUppercase?: boolean;
+    sessionTimeout?: number;
+    maxLoginAttempts?: number;
+    lockoutDuration?: number;
+    requireTwoFactor?: boolean;
+  };
+  analyticsSettings: {
+    realTimeUpdates?: boolean;
+    defaultDateRange?: string;
+    displayedMetrics?: string[];
+    exportFormat?: string;
+  };
+  appearanceSettings: {
+    theme?: string;
+    primaryColor?: string;
+    dashboardLayout?: string;
+  };
+}
+
+export const settingsApi = {
+  getSettings: () => fetchApi<Settings>('/settings'),
+  
+  updateAccountSettings: (data: Settings['accountSettings']) =>
+    fetchApi<Settings>('/settings/account', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  
+  updateSecuritySettings: (data: Settings['securitySettings']) =>
+    fetchApi<Settings>('/settings/security', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  
+  updateAnalyticsSettings: (data: Settings['analyticsSettings']) =>
+    fetchApi<Settings>('/settings/analytics', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  
+  updateAppearanceSettings: (data: Settings['appearanceSettings']) =>
+    fetchApi<Settings>('/settings/appearance', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  
+  changePassword: (currentPassword: string, newPassword: string) =>
+    fetchApi<{ success: boolean; message: string }>('/settings/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
+  
+  logoutAllSessions: () =>
+    fetchApi<{ success: boolean; message: string }>('/settings/logout-all-sessions', {
+      method: 'POST',
+    }),
 };

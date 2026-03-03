@@ -1,8 +1,7 @@
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import { Providers } from "./providers";
+import ClientLayout from "./ClientLayout";
 
 export const metadata = {
   title: "GCCF",
@@ -18,9 +17,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <NavbarWrapper />
-          <main>{children}</main>
-          <Footer />
+          <ClientLayout>{children}</ClientLayout>
         </Providers>
       </body>
     </html>

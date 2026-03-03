@@ -2,8 +2,75 @@
 .admin-dashboard {
   display: flex;
   min-height: 100vh;
-  background: #f5f7fa;
+  background: var(--bg-primary, #f5f7fa);
+  color: var(--text-primary, #1f2937);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.admin-dashboard.dark {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-card: #1f2937;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --border-color: #374151;
+}
+
+.admin-dashboard.dark .sidebar {
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+}
+
+.admin-dashboard.dark .stat-card,
+.admin-dashboard.dark .settings-card,
+.admin-dashboard.dark .settings-section,
+.admin-dashboard.dark .settings-sidebar,
+.admin-dashboard.dark .page-header,
+.admin-dashboard.dark .dashboard-content,
+.admin-dashboard.dark .content-filters,
+.admin-dashboard.dark .members-stats {
+  background: var(--bg-card, #ffffff);
+  color: var(--text-primary, #1f2937);
+}
+
+.admin-dashboard.dark .form-group label,
+.admin-dashboard.dark .settings-card h3,
+.admin-dashboard.dark .settings-section h2,
+.admin-dashboard.dark .section-description,
+.admin-dashboard.dark .help-text,
+.admin-dashboard.dark .toggle-label span:first-child,
+.admin-dashboard.dark .checkbox-label,
+.admin-dashboard.dark .activity-label {
+  color: var(--text-primary, #1f2937);
+}
+
+.admin-dashboard.dark input,
+.admin-dashboard.dark select {
+  background: #374151;
+  border-color: #4b5563;
+  color: #f3f4f6;
+}
+
+.admin-dashboard.dark .nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.admin-dashboard.dark .nav-item.active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.admin-dashboard.dark .table-container {
+  background: var(--bg-card, #ffffff);
+}
+
+.admin-dashboard.dark table {
+  background: var(--bg-card, #ffffff);
+}
+
+.admin-dashboard.dark th,
+.admin-dashboard.dark td {
+  border-color: var(--border-color, #e5e7eb);
+  color: var(--text-primary, #1f2937);
 }
 
 /* ===== Sidebar ===== */
@@ -1229,4 +1296,410 @@
 .btn-icon.success:hover {
   background: #4caf50;
   color: #ffffff;
+}
+
+/* ===== Settings Page ===== */
+.settings-container {
+  display: flex;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+.settings-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: fit-content;
+}
+
+.settings-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4b5563;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.settings-nav-item:hover {
+  background: #f3f4f6;
+}
+
+.settings-nav-item.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.settings-main {
+  flex: 1;
+}
+
+.settings-section {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.settings-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.section-description {
+  color: #6b7280;
+  margin-bottom: 32px;
+}
+
+.settings-card {
+  background: #f9fafb;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.settings-card h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.settings-card .form-group {
+  margin-bottom: 16px;
+}
+
+.settings-card .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.settings-card .help-text {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+/* Toggle Switch */
+.toggle-group {
+  margin-bottom: 12px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.toggle-label input {
+  display: none;
+}
+
+.toggle-slider {
+  width: 48px;
+  height: 26px;
+  background: #d1d5db;
+  border-radius: 13px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-label input:checked + .toggle-slider {
+  background: #2563eb;
+}
+
+.toggle-label input:checked + .toggle-slider::after {
+  left: 25px;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+}
+
+/* Activity Info */
+.activity-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-row {
+  display: flex;
+  gap: 12px;
+}
+
+.activity-label {
+  font-weight: 500;
+  color: #6b7280;
+  min-width: 100px;
+}
+
+.activity-value {
+  color: #1f2937;
+}
+
+/* Danger Zone */
+.danger-zone {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+}
+
+.danger-zone h3 {
+  color: #dc2626;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Theme Options */
+.theme-options {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 32px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-option input {
+  display: none;
+}
+
+.theme-option.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.theme-option svg {
+  font-size: 24px;
+  color: #6b7280;
+}
+
+.theme-option.active svg {
+  color: #2563eb;
+}
+
+/* Color Options */
+.color-options {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.color-option {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.color-option input {
+  display: none;
+}
+
+.color-option.active {
+  border-color: #1f2937;
+  transform: scale(1.1);
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+/* Export Buttons */
+.export-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.export-buttons .btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Success Banner */
+.success-banner {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .settings-container {
+    flex-direction: column;
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .settings-nav-item {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+
+  .settings-nav-item span {
+    display: none;
+  }
+
+  .theme-options {
+    flex-direction: column;
+  }
+
+  .export-buttons {
+    flex-direction: column;
+  }
+}
+
+/* Primary Color - Dynamic based on settings */
+.admin-dashboard .btn-primary {
+  background-color: var(--primary-color, #2563eb);
+  border-color: var(--primary-color, #2563eb);
+}
+
+.admin-dashboard .btn-primary:hover {
+  background-color: color-mix(in srgb, var(--primary-color, #2563eb) 85%, black);
+  border-color: color-mix(in srgb, var(--primary-color, #2563eb) 85%, black);
+}
+
+.admin-dashboard .stat-icon.blue,
+.admin-dashboard .stat-icon {
+  background-color: var(--primary-color, #2563eb);
+}
+
+.admin-dashboard .nav-item.active {
+  background-color: var(--primary-color, #2563eb);
+}
+
+.admin-dashboard .settings-nav-item.active {
+  background-color: var(--primary-color, #2563eb);
+}
+
+.admin-dashboard .toggle-label input:checked + .toggle-slider {
+  background-color: var(--primary-color, #2563eb);
+}
+
+.admin-dashboard .color-option.active {
+  border-color: var(--primary-color, #2563eb);
+}
+
+.admin-dashboard .theme-option.active {
+  border-color: var(--primary-color, #2563eb);
+  background-color: color-mix(in srgb, var(--primary-color, #2563eb) 10%, transparent);
+}
+
+.admin-dashboard .theme-option.active svg {
+  color: var(--primary-color, #2563eb);
+}
+
+.admin-dashboard .sidebar {
+  background: linear-gradient(180deg, var(--primary-color, #0d47a1) 0%, color-mix(in srgb, var(--primary-color, #0d47a1) 70%, black) 100%);
 }

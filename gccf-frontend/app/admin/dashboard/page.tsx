@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   FaTachometerAlt,
   FaNewspaper,
@@ -14,7 +15,6 @@ import {
   FaTrash,
   FaEye,
   FaSearch,
-  FaBell,
   FaSignOutAlt,
   FaBars,
   FaTimes,
@@ -23,10 +23,17 @@ import {
   FaCheck,
   FaBan,
   FaEnvelope,
+  FaPalette,
+  FaShieldAlt,
+  FaChartBar,
+  FaUser,
+  FaMoon,
+  FaSun,
+  FaDownload,
 } from "react-icons/fa";
 import "./adminpage.css";
 import Link from "next/link";
-import { newsApi, eventsApi, galleryApi, membershipsApi, analyticsApi, DashboardStats, MemberGrowthData, ActivityItem } from "@/lib/api";
+import { newsApi, eventsApi, galleryApi, membershipsApi, analyticsApi, settingsApi, DashboardStats, MemberGrowthData, ActivityItem } from "@/lib/api";
 import { News, CreateNewsDto, UpdateNewsDto } from "@/types/news";
 import { Event, CreateEventDto, UpdateEventDto } from "@/types/events";
 import { Gallery, CreateGalleryDto, UpdateGalleryDto } from "@/types/gallery";
@@ -131,6 +138,38 @@ export default function AdminDashboard() {
 
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [showEventModal, setShowEventModal] = useState(false);
+
+  const [settingsSection, setSettingsSection] = useState("account");
+  const [adminProfile, setAdminProfile] = useState({
+    name: "Admin User",
+    email: "admin@gccf.org",
+    twoFactorEnabled: false,
+    lastLogin: "2026-03-01 09:30 AM",
+    lastLoginIP: "192.168.1.100"
+  });
+  const [securitySettings, setSecuritySettings] = useState({
+    minPasswordLength: 8,
+    requireSpecialChars: true,
+    requireNumbers: true,
+    requireUppercase: true,
+    sessionTimeout: 30,
+    maxLoginAttempts: 5,
+    lockoutDuration: 15,
+    requireTwoFactor: false
+  });
+  const [analyticsSettings, setAnalyticsSettings] = useState({
+    realTimeUpdates: true,
+    defaultDateRange: "30",
+    displayedMetrics: ["members", "news", "events", "gallery"],
+    exportFormat: "csv"
+  });
+  const [appearanceSettings, setAppearanceSettings] = useState({
+    theme: "light",
+    primaryColor: "#2563eb",
+    dashboardLayout: "default"
+  });
+  const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
+  const [settingsSaved, setSettingsSaved] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<{type: 'news' | 'events' | 'gallery' | 'memberships', id: string} | null>(null);
 
@@ -149,6 +188,57 @@ export default function AdminDashboard() {
   const [memberGrowthData, setMemberGrowthData] = useState<MemberGrowthData[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [growthPeriod, setGrowthPeriod] = useState(7);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const settings = await settingsApi.getSettings();
+        if (settings) {
+          if (settings.accountSettings) {
+            setAdminProfile({
+              name: settings.accountSettings.name || "Admin User",
+              email: settings.accountSettings.email || "admin@gccf.org",
+              twoFactorEnabled: settings.accountSettings.twoFactorEnabled || false,
+              lastLogin: settings.accountSettings.lastLogin || "Unknown",
+              lastLoginIP: settings.accountSettings.lastLoginIP || "Unknown"
+            });
+          }
+          if (settings.securitySettings) {
+            setSecuritySettings({
+              minPasswordLength: settings.securitySettings.minPasswordLength || 8,
+              requireSpecialChars: settings.securitySettings.requireSpecialChars ?? true,
+              requireNumbers: settings.securitySettings.requireNumbers ?? true,
+              requireUppercase: settings.securitySettings.requireUppercase ?? true,
+              sessionTimeout: settings.securitySettings.sessionTimeout || 30,
+              maxLoginAttempts: settings.securitySettings.maxLoginAttempts || 5,
+              lockoutDuration: settings.securitySettings.lockoutDuration || 15,
+              requireTwoFactor: settings.securitySettings.requireTwoFactor ?? false
+            });
+          }
+          if (settings.analyticsSettings) {
+            setAnalyticsSettings({
+              realTimeUpdates: settings.analyticsSettings.realTimeUpdates ?? true,
+              defaultDateRange: settings.analyticsSettings.defaultDateRange || "30",
+              displayedMetrics: settings.analyticsSettings.displayedMetrics || ["members", "news", "events", "gallery"],
+              exportFormat: settings.analyticsSettings.exportFormat || "csv"
+            });
+          }
+          if (settings.appearanceSettings) {
+            setAppearanceSettings({
+              theme: settings.appearanceSettings.theme || "light",
+              primaryColor: settings.appearanceSettings.primaryColor || "#2563eb",
+              dashboardLayout: settings.appearanceSettings.dashboardLayout || "default"
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    };
+    loadSettings();
+  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -206,6 +296,372 @@ export default function AdminDashboard() {
     if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
     if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
     return then.toLocaleDateString();
+  };
+
+  const renderSettings = () => {
+    const handleSaveAccountSettings = async () => {
+      try {
+        await settingsApi.updateAccountSettings(adminProfile);
+        if (passwordForm.current && passwordForm.new && passwordForm.confirm) {
+          if (passwordForm.new !== passwordForm.confirm) {
+            alert("Passwords do not match!");
+            return;
+          }
+          await settingsApi.changePassword(passwordForm.current, passwordForm.new);
+          setPasswordForm({ current: "", new: "", confirm: "" });
+        }
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
+      } catch (err) {
+        alert("Failed to save account settings");
+      }
+    };
+
+    const handleSaveSecuritySettings = async () => {
+      try {
+        await settingsApi.updateSecuritySettings(securitySettings);
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
+      } catch (err) {
+        alert("Failed to save security settings");
+      }
+    };
+
+    const handleSaveAnalyticsSettings = async () => {
+      try {
+        await settingsApi.updateAnalyticsSettings(analyticsSettings);
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
+      } catch (err) {
+        alert("Failed to save analytics settings");
+      }
+    };
+
+    const handleSaveAppearanceSettings = async () => {
+      try {
+        await settingsApi.updateAppearanceSettings(appearanceSettings);
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
+      } catch (err) {
+        alert("Failed to save appearance settings");
+      }
+    };
+
+    const handleLogoutAllSessions = async () => {
+      if (confirm("Are you sure you want to logout from all sessions? This action cannot be undone.")) {
+        try {
+          await settingsApi.logoutAllSessions();
+          alert("All sessions have been logged out.");
+        } catch (err) {
+          alert("Failed to logout sessions");
+        }
+      }
+    };
+
+    const handleExportAnalytics = (format: string) => {
+      const metrics = analyticsSettings.displayedMetrics.join(", ");
+      const csvContent = `Metric,Value\nMembers,${membershipsList.length}\nNews,${newsList.length}\nEvents,${eventsList.length}\nGallery,${galleryList.length}`;
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics_export.${format}`;
+      a.click();
+    };
+
+    return (
+      <div className="dashboard-content">
+        <div className="page-header">
+          <h1>Settings</h1>
+          <p>Manage your account and system preferences</p>
+        </div>
+
+        {settingsSaved && (
+          <div className="success-banner" style={{ background: "#d4edda", padding: "1rem", marginBottom: "1rem", borderRadius: "8px", color: "#155724" }}>
+            Settings saved successfully!
+          </div>
+        )}
+
+        <div className="settings-container">
+          <div className="settings-sidebar">
+            <button className={`settings-nav-item ${settingsSection === "account" ? "active" : ""}`} onClick={() => setSettingsSection("account")}>
+              <FaUser /> <span>Account</span>
+            </button>
+            <button className={`settings-nav-item ${settingsSection === "security" ? "active" : ""}`} onClick={() => setSettingsSection("security")}>
+              <FaShieldAlt /> <span>Security</span>
+            </button>
+            <button className={`settings-nav-item ${settingsSection === "analytics" ? "active" : ""}`} onClick={() => setSettingsSection("analytics")}>
+              <FaChartBar /> <span>Analytics</span>
+            </button>
+            <button className={`settings-nav-item ${settingsSection === "appearance" ? "active" : ""}`} onClick={() => setSettingsSection("appearance")}>
+              <FaPalette /> <span>Appearance</span>
+            </button>
+          </div>
+
+          <div className="settings-main">
+            {settingsSection === "account" && (
+              <div className="settings-section">
+                <h2>Account Settings</h2>
+                <p className="section-description">Manage your admin profile and account security</p>
+
+                <div className="settings-card">
+                  <h3>Profile Information</h3>
+                  <div className="form-group">
+                    <label>Full Name</label>
+                    <input type="text" value={adminProfile.name} onChange={(e) => setAdminProfile({...adminProfile, name: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Email Address</label>
+                    <input type="email" value={adminProfile.email} onChange={(e) => setAdminProfile({...adminProfile, email: e.target.value})} />
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Change Password</h3>
+                  <div className="form-group">
+                    <label>Current Password</label>
+                    <input type="password" value={passwordForm.current} onChange={(e) => setPasswordForm({...passwordForm, current: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>New Password</label>
+                    <input type="password" value={passwordForm.new} onChange={(e) => setPasswordForm({...passwordForm, new: e.target.value})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" value={passwordForm.confirm} onChange={(e) => setPasswordForm({...passwordForm, confirm: e.target.value})} />
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Two-Factor Authentication</h3>
+                  <div className="toggle-group">
+                    <label className="toggle-label">
+                      <span>Enable 2FA</span>
+                      <input type="checkbox" checked={adminProfile.twoFactorEnabled} onChange={(e) => setAdminProfile({...adminProfile, twoFactorEnabled: e.target.checked})} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <p className="help-text">Add an extra layer of security to your account using an authenticator app</p>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Last Login Activity</h3>
+                  <div className="activity-info">
+                    <div className="activity-row">
+                      <span className="activity-label">Last Login:</span>
+                      <span className="activity-value">{adminProfile.lastLogin}</span>
+                    </div>
+                    <div className="activity-row">
+                      <span className="activity-label">IP Address:</span>
+                      <span className="activity-value">{adminProfile.lastLoginIP}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="settings-card danger-zone">
+                  <h3>Session Management</h3>
+                  <button className="btn btn-danger" onClick={handleLogoutAllSessions}>
+                    Logout from All Sessions
+                  </button>
+                </div>
+
+                <button className="btn btn-primary" onClick={handleSaveAccountSettings}>Save Changes</button>
+              </div>
+            )}
+
+            {settingsSection === "security" && (
+              <div className="settings-section">
+                <h2>Security Settings</h2>
+                <p className="section-description">Configure password policies and session security</p>
+
+                <div className="settings-card">
+                  <h3>Password Policy</h3>
+                  <div className="form-group">
+                    <label>Minimum Password Length</label>
+                    <input type="number" min="6" max="32" value={securitySettings.minPasswordLength} onChange={(e) => setSecuritySettings({...securitySettings, minPasswordLength: parseInt(e.target.value)})} />
+                  </div>
+                  <div className="toggle-group">
+                    <label className="toggle-label">
+                      <span>Require Special Characters (!@#$%^&*)</span>
+                      <input type="checkbox" checked={securitySettings.requireSpecialChars} onChange={(e) => setSecuritySettings({...securitySettings, requireSpecialChars: e.target.checked})} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div className="toggle-group">
+                    <label className="toggle-label">
+                      <span>Require Numbers (0-9)</span>
+                      <input type="checkbox" checked={securitySettings.requireNumbers} onChange={(e) => setSecuritySettings({...securitySettings, requireNumbers: e.target.checked})} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <div className="toggle-group">
+                    <label className="toggle-label">
+                      <span>Require Uppercase Letters (A-Z)</span>
+                      <input type="checkbox" checked={securitySettings.requireUppercase} onChange={(e) => setSecuritySettings({...securitySettings, requireUppercase: e.target.checked})} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Session Settings</h3>
+                  <div className="form-group">
+                    <label>Session Timeout (minutes)</label>
+                    <input type="number" min="5" max="120" value={securitySettings.sessionTimeout} onChange={(e) => setSecuritySettings({...securitySettings, sessionTimeout: parseInt(e.target.value)})} />
+                    <span className="help-text">Auto-logout after inactivity. Recommended: 15-30 minutes</span>
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Login Protection</h3>
+                  <div className="form-group">
+                    <label>Maximum Login Attempts</label>
+                    <input type="number" min="3" max="10" value={securitySettings.maxLoginAttempts} onChange={(e) => setSecuritySettings({...securitySettings, maxLoginAttempts: parseInt(e.target.value)})} />
+                  </div>
+                  <div className="form-group">
+                    <label>Lockout Duration (minutes)</label>
+                    <input type="number" min="5" max="60" value={securitySettings.lockoutDuration} onChange={(e) => setSecuritySettings({...securitySettings, lockoutDuration: parseInt(e.target.value)})} />
+                    <span className="help-text">Account will be locked after exceeding max attempts</span>
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Two-Factor Authentication</h3>
+                  <div className="toggle-group">
+                    <label className="toggle-label">
+                      <span>Require 2FA for All Users</span>
+                      <input type="checkbox" checked={securitySettings.requireTwoFactor} onChange={(e) => setSecuritySettings({...securitySettings, requireTwoFactor: e.target.checked})} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <p className="help-text">Enforce two-factor authentication for all admin users</p>
+                </div>
+
+                <button className="btn btn-primary" onClick={handleSaveSecuritySettings}>Save Security Settings</button>
+              </div>
+            )}
+
+            {settingsSection === "analytics" && (
+              <div className="settings-section">
+                <h2>Dashboard & Analytics Settings</h2>
+                <p className="section-description">Configure analytics display and export options</p>
+
+                <div className="settings-card">
+                  <h3>Real-Time Updates</h3>
+                  <div className="toggle-group">
+                    <label className="toggle-label">
+                      <span>Enable Real-Time Updates</span>
+                      <input type="checkbox" checked={analyticsSettings.realTimeUpdates} onChange={(e) => setAnalyticsSettings({...analyticsSettings, realTimeUpdates: e.target.checked})} />
+                      <span className="toggle-slider"></span>
+                    </label>
+                  </div>
+                  <p className="help-text">Automatically refresh analytics data without page reload</p>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Date Range Defaults</h3>
+                  <div className="form-group">
+                    <label>Default Date Range</label>
+                    <select value={analyticsSettings.defaultDateRange} onChange={(e) => setAnalyticsSettings({...analyticsSettings, defaultDateRange: e.target.value})}>
+                      <option value="7">Last 7 Days</option>
+                      <option value="14">Last 14 Days</option>
+                      <option value="30">Last 30 Days</option>
+                      <option value="60">Last 60 Days</option>
+                      <option value="90">Last 90 Days</option>
+                      <option value="365">Last Year</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Metrics Display</h3>
+                  <p className="help-text">Select which metrics to display on the dashboard</p>
+                  <div className="checkbox-group">
+                    {["members", "news", "events", "gallery"].map((metric) => (
+                      <label key={metric} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={analyticsSettings.displayedMetrics.includes(metric)}
+                          onChange={(e) => {
+                            const newMetrics = e.target.checked
+                              ? [...analyticsSettings.displayedMetrics, metric]
+                              : analyticsSettings.displayedMetrics.filter(m => m !== metric);
+                            setAnalyticsSettings({...analyticsSettings, displayedMetrics: newMetrics});
+                          }}
+                        />
+                        <span>{metric.charAt(0).toUpperCase() + metric.slice(1)}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Export Analytics</h3>
+                  <p className="help-text">Download analytics data in your preferred format</p>
+                  <div className="export-buttons">
+                    <button className="btn btn-secondary" onClick={() => handleExportAnalytics("csv")}>
+                      <FaDownload /> Export CSV
+                    </button>
+                    <button className="btn btn-secondary" onClick={() => handleExportAnalytics("xlsx")}>
+                      <FaDownload /> Export Excel
+                    </button>
+                  </div>
+                </div>
+
+                <button className="btn btn-primary" onClick={handleSaveAnalyticsSettings}>Save Analytics Settings</button>
+              </div>
+            )}
+
+            {settingsSection === "appearance" && (
+              <div className="settings-section">
+                <h2>Appearance Settings</h2>
+                <p className="section-description">Customize the look and feel of your dashboard</p>
+
+                <div className="settings-card">
+                  <h3>Theme</h3>
+                  <div className="theme-options">
+                    <label className={`theme-option ${appearanceSettings.theme === "light" ? "active" : ""}`}>
+                      <input type="radio" name="theme" value="light" checked={appearanceSettings.theme === "light"} onChange={(e) => setAppearanceSettings({...appearanceSettings, theme: e.target.value})} />
+                      <FaSun />
+                      <span>Light</span>
+                    </label>
+                    <label className={`theme-option ${appearanceSettings.theme === "dark" ? "active" : ""}`}>
+                      <input type="radio" name="theme" value="dark" checked={appearanceSettings.theme === "dark"} onChange={(e) => setAppearanceSettings({...appearanceSettings, theme: e.target.value})} />
+                      <FaMoon />
+                      <span>Dark</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Primary Color</h3>
+                  <div className="color-options">
+                    {["#2563eb", "#7c3aed", "#059669", "#dc2626", "#ea580c", "#0891b2"].map((color) => (
+                      <label key={color} className={`color-option ${appearanceSettings.primaryColor === color ? "active" : ""}`} style={{ backgroundColor: color }}>
+                        <input type="radio" name="primaryColor" value={color} checked={appearanceSettings.primaryColor === color} onChange={(e) => setAppearanceSettings({...appearanceSettings, primaryColor: e.target.value})} />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="settings-card">
+                  <h3>Dashboard Layout</h3>
+                  <div className="form-group">
+                    <select value={appearanceSettings.dashboardLayout} onChange={(e) => setAppearanceSettings({...appearanceSettings, dashboardLayout: e.target.value})}>
+                      <option value="default">Default</option>
+                      <option value="compact">Compact</option>
+                      <option value="expanded">Expanded</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button className="btn btn-primary" onClick={handleSaveAppearanceSettings}>Save Appearance Settings</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderDashboard = () => (
@@ -903,7 +1359,10 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="admin-dashboard">
+    <div 
+      className={`admin-dashboard ${appearanceSettings.theme === "dark" ? "dark" : ""}`}
+      style={{ "--primary-color": appearanceSettings.primaryColor } as React.CSSProperties}
+    >
       <aside className={`sidebar ${sidebarOpen ? "open" : "closed"}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
@@ -935,10 +1394,7 @@ export default function AdminDashboard() {
             <FaUsers />
             {sidebarOpen && <span>Members</span>}
           </button>
-          <button className={`nav-item ${activeTab === "analytics" ? "active" : ""}`} onClick={() => setActiveTab("analytics")}>
-            <FaChartLine />
-            {sidebarOpen && <span>Analytics</span>}
-          </button>
+
           <button className={`nav-item ${activeTab === "settings" ? "active" : ""}`} onClick={() => setActiveTab("settings")}>
             <FaCog />
             {sidebarOpen && <span>Settings</span>}
@@ -962,17 +1418,6 @@ export default function AdminDashboard() {
             <h2>Admin Panel</h2>
           </div>
           <div className="header-right">
-            <button className="header-icon">
-              <FaBell />
-              <span className="notification-badge">3</span>
-            </button>
-            <div className="admin-profile">
-              <img src="/Hi.jpg" alt="Admin" />
-              <div className="profile-info">
-                <span className="profile-name">Admin User</span>
-                <span className="profile-role">Administrator</span>
-              </div>
-            </div>
           </div>
         </header>
 
@@ -997,18 +1442,7 @@ export default function AdminDashboard() {
               {activeTab === "events" && renderEvents()}
               {activeTab === "gallery" && renderGallery()}
               {activeTab === "members" && renderMembers()}
-              {activeTab === "analytics" && (
-                <div className="dashboard-content">
-                  <h1>Analytics</h1>
-                  <p>Coming soon...</p>
-                </div>
-              )}
-              {activeTab === "settings" && (
-                <div className="dashboard-content">
-                  <h1>Settings</h1>
-                  <p>Coming soon...</p>
-                </div>
-              )}
+              {activeTab === "settings" && renderSettings()}
             </>
           )}
         </div>

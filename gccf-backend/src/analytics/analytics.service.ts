@@ -1,10 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, MoreThanOrEqual } from 'typeorm';
+import { Repository, MoreThanOrEqual, LessThanOrEqual, Between } from 'typeorm';
 import { Membership } from '../memberships/entities/membership.entity';
 import { News } from '../news/entities/news.entity';
 import { Event } from '../events/entities/event.entity';
 import { Gallery } from '../gallery/entities/gallery.entity';
+
+interface DateRange {
+  start: Date;
+  end: Date;
+}
 
 @Injectable()
 export class AnalyticsService {
@@ -221,5 +226,202 @@ export class AnalyticsService {
     return activities
       .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
       .slice(0, limit);
+  }
+
+  async getEventStatsByDateRange(startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const upcoming = await this.eventRepository.count({
+      where: {
+        status: 'upcoming',
+        eventDate: Between(start, end),
+      },
+    });
+
+    const completed = await this.eventRepository.count({
+      where: {
+        status: 'completed',
+        eventDate: Between(start, end),
+      },
+    });
+
+    const eventsByMonth = await this.eventRepository
+      .createQueryBuilder('event')
+      .select("TO_CHAR(event.eventDate, 'YYYY-MM')", 'month')
+      .addSelect('COUNT(*)', 'count')
+      .where('event.eventDate BETWEEN :start AND :end', { start, end })
+      .groupBy("TO_CHAR(event.eventDate, 'YYYY-MM')")
+      .orderBy('month', 'ASC')
+      .getRawMany();
+
+    return {
+      upcoming,
+      completed,
+      total: upcoming + completed,
+      byMonth: eventsByMonth.reverse(),
+    };
+  }
+
+  async getNewsActivityByDateRange(startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const total = await this.newsRepository.count({
+      where: {
+        publishedDate: Between(start, end),
+      },
+    });
+
+    const byMonth = await this.newsRepository
+      .createQueryBuilder('news')
+      .select("TO_CHAR(news.publishedDate, 'YYYY-MM')", 'month')
+      .addSelect('COUNT(*)', 'count')
+      .where('news.publishedDate BETWEEN :start AND :end', { start, end })
+      .groupBy("TO_CHAR(news.publishedDate, 'YYYY-MM')")
+      .orderBy('month', 'ASC')
+      .getRawMany();
+
+    const byCategory = await this.newsRepository
+      .createQueryBuilder('news')
+      .select('news.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .where('news.publishedDate BETWEEN :start AND :end', { start, end })
+      .groupBy('news.category')
+      .getRawMany();
+
+    return {
+      total,
+      byMonth: byMonth.reverse(),
+      byCategory: byCategory.map(c => ({
+        category: c.category || 'Uncategorized',
+        count: parseInt(c.count),
+      })),
+    };
+  }
+
+  async getMembershipByDateRange(startDate: string, endDate: string) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const byStatus = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .select('membership.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('membership.createdAt BETWEEN :start AND :end', { start, end })
+      .groupBy('membership.status')
+      .getRawMany();
+
+    const byMonth = await this.membershipRepository
+      .createQueryBuilder('membership')
+      .select("TO_CHAR(membership.createdAt, 'YYYY-MM')", 'month')
+      .addSelect('COUNT(*)', 'count')
+      .where('membership.createdAt BETWEEN :start AND :end', { start, end })
+      .groupBy("TO_CHAR(membership.createdAt, 'YYYY-MM')")
+      .orderBy('month', 'ASC')
+      .getRawMany();
+
+    return {
+      byStatus: byStatus.map(s => ({
+        status: s.status,
+        count: parseInt(s.count),
+      })),
+      byMonth: byMonth.reverse(),
+    };
+  }
+
+  async getComprehensiveAnalytics(startDate?: string, endDate?: string) {
+    const now = new Date();
+    let start = startDate ? new Date(startDate) : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    let end = endDate ? new Date(endDate) : now;
+
+    const [
+      dashboardStats,
+      memberGrowth,
+      eventStats,
+      membershipStats,
+      newsActivity,
+      recentActivity,
+    ] = await Promise.all([
+      this.getDashboardStats(),
+      this.getMemberGrowthData(30),
+      this.getEventStatsByDateRange(start.toISOString(), end.toISOString()),
+      this.getMembershipByDateRange(start.toISOString(), end.toISOString()),
+      this.getNewsActivityByDateRange(start.toISOString(), end.toISOString()),
+      this.getRecentActivity(20),
+    ]);
+
+    return {
+      dateRange: { start: start.toISOString(), end: end.toISOString() },
+      dashboardStats,
+      memberGrowth,
+      eventStats,
+      membershipStats,
+      newsActivity,
+      recentActivity,
+    };
+  }
+
+  async getExportData(type: 'members' | 'events' | 'news', startDate?: string, endDate?: string) {
+    const start = startDate ? new Date(startDate) : new Date(0);
+    const end = endDate ? new Date(endDate) : new Date();
+
+    if (type === 'members') {
+      const members = await this.membershipRepository.find({
+        where: {
+          createdAt: Between(start, end),
+        },
+        order: { createdAt: 'DESC' },
+      });
+      return members.map(m => ({
+        id: m.id,
+        name: `${m.firstName} ${m.lastName}`,
+        email: m.email,
+        phone: m.phone,
+        organization: m.organization,
+        occupation: m.occupation,
+        status: m.status,
+        createdAt: m.createdAt,
+      }));
+    }
+
+    if (type === 'events') {
+      const events = await this.eventRepository.find({
+        where: {
+          eventDate: Between(start, end),
+        },
+        order: { eventDate: 'DESC' },
+      });
+      return events.map(e => ({
+        id: e.id,
+        title: e.title,
+        description: e.description,
+        eventDate: e.eventDate,
+        location: e.location,
+        status: e.status,
+        attendees: e.attendees,
+        organizer: e.organizer,
+      }));
+    }
+
+    if (type === 'news') {
+      const news = await this.newsRepository.find({
+        where: {
+          publishedDate: Between(start, end),
+        },
+        order: { publishedDate: 'DESC' },
+      });
+      return news.map(n => ({
+        id: n.id,
+        title: n.title,
+        excerpt: n.excerpt,
+        author: n.author,
+        category: n.category,
+        publishedDate: n.publishedDate,
+        source: n.source,
+      }));
+    }
+
+    return [];
   }
 }

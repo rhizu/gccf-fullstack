@@ -29,4 +29,45 @@ export class AnalyticsController {
   getRecentActivity(@Query('limit') limit: string) {
     return this.analyticsService.getRecentActivity(parseInt(limit) || 10);
   }
+
+  @Get('event-stats')
+  getEventStats(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.analyticsService.getEventStatsByDateRange(startDate, endDate);
+  }
+
+  @Get('news-activity')
+  getNewsActivity(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.analyticsService.getNewsActivityByDateRange(startDate, endDate);
+  }
+
+  @Get('membership-by-range')
+  getMembershipByDateRange(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.analyticsService.getMembershipByDateRange(startDate, endDate);
+  }
+
+  @Get('comprehensive')
+  getComprehensiveAnalytics(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.analyticsService.getComprehensiveAnalytics(startDate, endDate);
+  }
+
+  @Get('export')
+  getExportData(
+    @Query('type') type: 'members' | 'events' | 'news',
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.analyticsService.getExportData(type, startDate, endDate);
+  }
 }

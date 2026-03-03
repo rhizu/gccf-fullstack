@@ -11,6 +11,7 @@ import { MailModule } from './mail/mail.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     NewsModule,
     GalleryModule,
     MembershipsModule,
+    SettingsModule,
   ],
 })
 export class AppModule {}
