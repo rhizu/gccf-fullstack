@@ -50,7 +50,7 @@ It provides a dynamic system where administrators can manage website content thr
 
 ### System Architecture:
 
-- The system follows a modular and scalable architecture:
+- The system follows a modular and scalable architecture
 
 - Frontend communicates with backend APIs built in NestJS
 
