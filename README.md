@@ -1,6 +1,4 @@
-Global Cybersecurity Community Forum (GCCF)
-
-Content Management System (CMS) Web Application
+Content Management System (CMS) Web Application For Global Cybersecurity Community Forum (GCCF)
 
 Overview
 
